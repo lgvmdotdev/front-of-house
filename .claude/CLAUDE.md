@@ -54,6 +54,10 @@ Biome catches syntax and style. Focus your own attention on:
 
 ## Framework Notes
 
+### Effect-TS: always refer to the Entire Effect-TS repository cloned under `.effect-ts/effect`.
+
+Before any Effect-TS work, find and read the repository in `.effect-ts/effect`. Your training data is outdated — the docs are the source of truth.
+
 ### Next.js: always read docs before coding
 
 Before any Next.js work, find and read the relevant doc in `apps/web/node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.

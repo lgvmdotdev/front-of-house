@@ -9,6 +9,7 @@
     "ignoreUnknown": false,
     "includes": [
       "**",
+      "!**/.effect-ts",
       "!**/.next",
       "!**/dist",
       "!**/.turbo",
@@ -45,7 +46,11 @@
           "level": "warn",
           "fix": "safe",
           "options": {
-            "functions": ["clsx", "cva", "cn"]
+            "functions": [
+              "clsx",
+              "cva",
+              "cn"
+            ]
           }
         }
       },
@@ -81,5 +86,8 @@
       }
     }
   },
-  "extends": ["ultracite/biome/core", "ultracite/biome/next"]
+  "extends": [
+    "ultracite/biome/core",
+    "ultracite/biome/next"
+  ]
 }
