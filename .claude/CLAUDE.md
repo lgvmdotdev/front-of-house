@@ -4,10 +4,25 @@ Guidance for anyone (human or agent) writing code in this repo.
 
 ## Contents
 
-1. [Runtime & Tooling](#runtime--tooling) — Bun, Ultracite
-2. [Framework Notes](#framework-notes) — Next.js
-3. [Code Standards](#code-standards) — principles, style, security, performance
-4. [Testing](#testing) — TDD, no mocking, hygiene
+1. [Product](#product) — what we're building and for whom
+2. [Runtime & Tooling](#runtime--tooling) — Bun, Ultracite
+3. [Framework Notes](#framework-notes) — Next.js, Effect-TS
+4. [Code Standards](#code-standards) — principles, style, security, performance
+5. [Testing](#testing) — TDD, no mocking, hygiene
+
+---
+
+## Product
+
+**Recepcionai** (recepcion-AI) is an AI receptionist for barbershops that operates on WhatsApp. The agent reads incoming customer messages, books appointments into the barbershop's existing scheduling tool (Booksy, Trinks, Belezito, Google Agenda, etc.), answers questions about services and barber availability, and sends day-of confirmations to reduce no-shows.
+
+- **Market:** Brazilian barbershops. Customer communication is pt-BR; WhatsApp is the channel.
+- **Stage:** Private beta with a few pilot shops. No public testimonials or no-show-reduction numbers yet — **do not fabricate any**.
+- **Positioning:** Not a replacement for existing booking tools — a layer on top. We integrate, we don't compete.
+- **Primary conversion action on the marketing site:** "Agendar demonstração" (book a demo with the founder). No self-serve trial. **Pricing is never shown publicly.**
+- **Founder:** Luiz Vergennes, senior software engineer.
+
+Full product-marketing context — positioning, voice-of-customer, capability list, FAQ guidance, copy do/don't list, brand — lives in [.agents/product-marketing.md](../.agents/product-marketing.md). Read it before writing any marketing copy, landing-page sections, or customer-facing UI strings.
 
 ---
 
