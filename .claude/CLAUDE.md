@@ -6,7 +6,7 @@ Guidance for anyone (human or agent) writing code in this repo.
 
 1. [Product](#product) — what we're building and for whom
 2. [Runtime & Tooling](#runtime--tooling) — Bun, Ultracite
-3. [Framework Notes](#framework-notes) — Next.js, Effect-TS
+3. [Framework Notes](#framework-notes) — Next.js
 4. [Code Standards](#code-standards) — principles, style, security, performance
 5. [Testing](#testing) — TDD, no mocking, hygiene
 
@@ -69,9 +69,9 @@ Biome catches syntax and style. Focus your own attention on:
 
 ## Framework Notes
 
-### Effect-TS: always refer to the Entire Effect-TS repository cloned under `.effect-ts/effect`.
+### Effect-TS: not used in this project
 
-Before any Effect-TS work, find and read the repository in `.effect-ts/effect`. Your training data is outdated — the docs are the source of truth.
+We are **not** using Effect-TS. Write plain `async/await` + `zod` (matching the `db`, `auth`, and `env` packages). Do not introduce Effect as a dependency or pattern without an explicit decision to adopt it.
 
 ### Next.js: always read docs before coding
 

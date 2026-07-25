@@ -1,3 +1,4 @@
+import { Toaster } from "@workspace/ui/components/sonner";
 import { cn } from "@workspace/ui/lib/utils";
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Geist, JetBrains_Mono } from "next/font/google";
@@ -62,6 +63,7 @@ export default function RootLayout({
 			<body className="bg-background font-sans text-foreground">
 				<ThemeProvider defaultTheme="dark" forcedTheme="dark">
 					{children}
+					<Toaster />
 				</ThemeProvider>
 			</body>
 		</html>

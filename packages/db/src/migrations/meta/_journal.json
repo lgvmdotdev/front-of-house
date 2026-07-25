@@ -8,6 +8,13 @@
       "when": 1776477133538,
       "tag": "0000_parallel_supreme_intelligence",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782481678439,
+      "tag": "0001_absurd_sinister_six",
+      "breakpoints": true
     }
   ]
 }

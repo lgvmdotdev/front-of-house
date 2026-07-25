@@ -5,9 +5,10 @@ import { env } from "@workspace/env/web";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { admin, lastLoginMethod } from "better-auth/plugins";
+import { admin, lastLoginMethod, organization } from "better-auth/plugins";
 
 // biome-ignore lint/performance/noBarrelFile: Next.js
+export { organizationClient } from "better-auth/client/plugins";
 export { toNextJsHandler } from "better-auth/next-js";
 export { createAuthClient } from "better-auth/react";
 
@@ -41,7 +42,25 @@ const createAuth = () => {
 			trustedProxyHeaders: true,
 			cookiePrefix: env.PROJECT_NAME,
 		},
-		plugins: [admin(), lastLoginMethod(), nextCookies(), passkey()],
+		plugins: [
+			admin(),
+			lastLoginMethod(),
+			nextCookies(),
+			passkey(),
+			organization({
+				// One barbershop per owner; the creator becomes its "owner".
+				creatorRole: "owner",
+				organizationLimit: 1,
+				sendInvitationEmail({ id, email }) {
+					return new Promise((resolve) => {
+						if (env.NODE_ENV !== "production") {
+							console.debug(`invite ${id} for ${email}`);
+						}
+						resolve();
+					});
+				},
+			}),
+		],
 	});
 };
 
