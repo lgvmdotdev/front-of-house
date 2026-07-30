@@ -63,4 +63,37 @@ export class MetaCloudApiClient implements WhatsAppClient {
 		}
 		return { waMessageId };
 	}
+
+	markAsRead(waMessageId: string): Promise<void> {
+		return this.#postStatus({
+			messaging_product: "whatsapp",
+			status: "read",
+			message_id: waMessageId,
+		});
+	}
+
+	showTypingIndicator(waMessageId: string): Promise<void> {
+		return this.#postStatus({
+			messaging_product: "whatsapp",
+			status: "read",
+			message_id: waMessageId,
+			typing_indicator: { type: "text" },
+		});
+	}
+
+	async #postStatus(body: Record<string, unknown>): Promise<void> {
+		const url = `https://graph.facebook.com/${this.#apiVersion}/${this.#phoneNumberId}/messages`;
+		const response = await this.#fetch(url, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${this.#accessToken}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(body),
+		});
+
+		if (!response.ok) {
+			throw new WhatsAppApiError(response.status, await response.text());
+		}
+	}
 }

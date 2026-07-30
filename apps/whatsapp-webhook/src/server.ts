@@ -4,7 +4,7 @@ import { createQueueClient } from "./queue-client";
 
 const DEFAULT_PORT = 8787;
 
-const queue = createQueueClient(env.DATABASE_URL);
+const queue = createQueueClient(env.AMQP_URL);
 await queue.start();
 
 const server = Bun.serve({

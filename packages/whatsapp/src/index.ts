@@ -3,8 +3,6 @@
 export { MetaCloudApiClient, type MetaCloudApiClientOptions } from "./client";
 export {
 	WebhookPayloadError,
-	WebhookSignatureError,
-	WebhookVerificationError,
 	WhatsAppApiError,
 	WhatsAppError,
 	type WhatsAppErrorCode,
@@ -19,16 +17,8 @@ export {
 	INBOUND_MESSAGE_QUEUE_NAME,
 	INBOUND_MESSAGE_QUEUE_OPTIONS,
 } from "./queue";
-export type {
-	InboundMessage,
-	MetaWebhookPayload,
-	WebhookVerificationQuery,
-} from "./types";
-export {
-	inboundMessageSchema,
-	metaWebhookPayloadSchema,
-	webhookVerificationQuerySchema,
-} from "./types";
+export type { InboundMessage, MetaWebhookPayload } from "./types";
+export { inboundMessageSchema, metaWebhookPayloadSchema } from "./types";
 export {
 	parseInboundMessages,
 	verifySignature,

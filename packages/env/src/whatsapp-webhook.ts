@@ -2,7 +2,7 @@ import { z } from "zod/mini";
 
 const whatsappWebhookEnvSchema = z.object({
 	NODE_ENV: z.enum(["development", "production", "test"]),
-	DATABASE_URL: z.string(),
+	AMQP_URL: z.string(),
 	WHATSAPP_VERIFY_TOKEN: z.string(),
 	WHATSAPP_APP_SECRET: z.string(),
 	PORT: z.optional(z.string()),

@@ -22,4 +22,21 @@ describe("FakeWhatsAppClient", () => {
 
 		expect(first.waMessageId).not.toBe(second.waMessageId);
 	});
+
+	test("records every message marked as read", async () => {
+		const client = new FakeWhatsAppClient();
+
+		await client.markAsRead("wamid.ONE");
+		await client.markAsRead("wamid.TWO");
+
+		expect(client.readMessageIds).toEqual(["wamid.ONE", "wamid.TWO"]);
+	});
+
+	test("records every typing indicator shown", async () => {
+		const client = new FakeWhatsAppClient();
+
+		await client.showTypingIndicator("wamid.ONE");
+
+		expect(client.typingIndicatorMessageIds).toEqual(["wamid.ONE"]);
+	});
 });

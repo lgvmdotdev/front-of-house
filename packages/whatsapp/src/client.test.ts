@@ -127,3 +127,89 @@ describe("MetaCloudApiClient.sendText", () => {
 		}
 	});
 });
+
+describe("MetaCloudApiClient.markAsRead", () => {
+	test("posts a read receipt referencing the given message id", async () => {
+		const { fetchImpl, requests } = fakeFetch([
+			{ status: 200, body: { success: true } },
+		]);
+		const client = new MetaCloudApiClient({
+			accessToken: "test-token",
+			phoneNumberId: "123456123",
+			fetchImpl,
+		});
+
+		await client.markAsRead("wamid.ABC123");
+
+		expect(requests).toHaveLength(1);
+		const [request] = requests;
+		expect(request?.url).toBe(
+			"https://graph.facebook.com/v22.0/123456123/messages"
+		);
+		expect(request?.method).toBe("POST");
+		expect(request?.headers.authorization).toBe("Bearer test-token");
+		expect(request?.body).toEqual({
+			messaging_product: "whatsapp",
+			status: "read",
+			message_id: "wamid.ABC123",
+		});
+	});
+
+	test("throws WhatsAppApiError when the API responds with a non-2xx status", async () => {
+		const { fetchImpl } = fakeFetch([
+			{ status: 401, body: { error: { message: "Invalid OAuth token" } } },
+		]);
+		const client = new MetaCloudApiClient({
+			accessToken: "bad-token",
+			phoneNumberId: "123456123",
+			fetchImpl,
+		});
+
+		await expect(client.markAsRead("wamid.ABC123")).rejects.toThrow(
+			WhatsAppApiError
+		);
+	});
+});
+
+describe("MetaCloudApiClient.showTypingIndicator", () => {
+	test("posts a combined read receipt + typing indicator", async () => {
+		const { fetchImpl, requests } = fakeFetch([
+			{ status: 200, body: { success: true } },
+		]);
+		const client = new MetaCloudApiClient({
+			accessToken: "test-token",
+			phoneNumberId: "123456123",
+			fetchImpl,
+		});
+
+		await client.showTypingIndicator("wamid.ABC123");
+
+		expect(requests).toHaveLength(1);
+		const [request] = requests;
+		expect(request?.url).toBe(
+			"https://graph.facebook.com/v22.0/123456123/messages"
+		);
+		expect(request?.method).toBe("POST");
+		expect(request?.body).toEqual({
+			messaging_product: "whatsapp",
+			status: "read",
+			message_id: "wamid.ABC123",
+			typing_indicator: { type: "text" },
+		});
+	});
+
+	test("throws WhatsAppApiError when the API responds with a non-2xx status", async () => {
+		const { fetchImpl } = fakeFetch([
+			{ status: 401, body: { error: { message: "Invalid OAuth token" } } },
+		]);
+		const client = new MetaCloudApiClient({
+			accessToken: "bad-token",
+			phoneNumberId: "123456123",
+			fetchImpl,
+		});
+
+		await expect(client.showTypingIndicator("wamid.ABC123")).rejects.toThrow(
+			WhatsAppApiError
+		);
+	});
+});

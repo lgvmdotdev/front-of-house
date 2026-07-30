@@ -5,11 +5,10 @@ import {
 	inboundMessageSchema,
 	MetaCloudApiClient,
 } from "@workspace/whatsapp";
-import { PgBoss } from "pg-boss";
+import amqplib from "amqplib";
 import { processInboundMessage } from "./process-inbound-message";
 
-const BATCH_SIZE = 25;
-const POLLING_INTERVAL_SECONDS = 1;
+const PREFETCH_COUNT = 25;
 
 const client = new MetaCloudApiClient({
 	accessToken: env.WHATSAPP_ACCESS_TOKEN,
@@ -17,28 +16,35 @@ const client = new MetaCloudApiClient({
 	apiVersion: env.WHATSAPP_API_VERSION,
 });
 
-const boss = new PgBoss(env.DATABASE_URL);
-boss.on("error", (error: unknown) => {
-	process.stderr.write(`[pg-boss] ${String(error)}\n`);
+const connection = await amqplib.connect(env.AMQP_URL);
+connection.on("error", (error: unknown) => {
+	process.stderr.write(`[amqp] connection error: ${String(error)}\n`);
 });
 
-await boss.start();
-await boss.createQueue(
+const channel = await connection.createChannel();
+await channel.assertQueue(
 	INBOUND_MESSAGE_QUEUE_NAME,
 	INBOUND_MESSAGE_QUEUE_OPTIONS
 );
+await channel.prefetch(PREFETCH_COUNT);
 
-await boss.work(
-	INBOUND_MESSAGE_QUEUE_NAME,
-	{ batchSize: BATCH_SIZE, pollingIntervalSeconds: POLLING_INTERVAL_SECONDS },
-	async (jobs) => {
-		await Promise.all(
-			jobs.map(async (job) => {
-				const message = inboundMessageSchema.parse(job.data);
-				await processInboundMessage(message, client);
-			})
-		);
+await channel.consume(INBOUND_MESSAGE_QUEUE_NAME, async (msg) => {
+	if (!msg) {
+		return;
 	}
-);
+	try {
+		const data = JSON.parse(msg.content.toString());
+		const message = inboundMessageSchema.parse(data);
+		await processInboundMessage(message, client);
+		channel.ack(msg);
+	} catch (error) {
+		process.stderr.write(
+			`[whatsapp-worker] failed to process job: ${String(error)}\n`
+		);
+		// Drop rather than requeue — a malformed/failing message would otherwise
+		// loop forever with no dead-letter queue wired up yet.
+		channel.nack(msg, false, false);
+	}
+});
 
 process.stdout.write("whatsapp-worker started\n");

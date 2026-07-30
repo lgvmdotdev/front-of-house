@@ -1,15 +1,5 @@
 import { z } from "zod";
 
-/** Query params Meta sends on the `GET` webhook verification handshake. */
-export const webhookVerificationQuerySchema = z.object({
-	"hub.mode": z.string(),
-	"hub.verify_token": z.string(),
-	"hub.challenge": z.string(),
-});
-export type WebhookVerificationQuery = z.infer<
-	typeof webhookVerificationQuerySchema
->;
-
 export const textMessageSchema = z.object({
 	from: z.string(),
 	id: z.string(),

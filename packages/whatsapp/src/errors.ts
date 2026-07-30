@@ -5,8 +5,6 @@
  */
 
 export type WhatsAppErrorCode =
-	| "WEBHOOK_VERIFICATION_FAILED"
-	| "WEBHOOK_SIGNATURE_INVALID"
 	| "WEBHOOK_PAYLOAD_MALFORMED"
 	| "API_REQUEST_FAILED";
 
@@ -18,24 +16,6 @@ export class WhatsAppError extends Error {
 		super(message);
 		this.name = new.target.name;
 		this.code = code;
-	}
-}
-
-export class WebhookVerificationError extends WhatsAppError {
-	constructor() {
-		super(
-			"WEBHOOK_VERIFICATION_FAILED",
-			"hub.mode/hub.verify_token did not match the configured verify token"
-		);
-	}
-}
-
-export class WebhookSignatureError extends WhatsAppError {
-	constructor() {
-		super(
-			"WEBHOOK_SIGNATURE_INVALID",
-			"X-Hub-Signature-256 did not match the HMAC computed for the request body"
-		);
 	}
 }
 

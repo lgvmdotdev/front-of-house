@@ -2,7 +2,7 @@ import { z } from "zod/mini";
 
 const whatsappWorkerEnvSchema = z.object({
 	NODE_ENV: z.enum(["development", "production", "test"]),
-	DATABASE_URL: z.string(),
+	AMQP_URL: z.string(),
 	WHATSAPP_ACCESS_TOKEN: z.string(),
 	WHATSAPP_PHONE_NUMBER_ID: z.string(),
 	WHATSAPP_API_VERSION: z.optional(z.string()),

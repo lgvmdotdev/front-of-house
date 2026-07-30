@@ -12,10 +12,11 @@
   "dependencies": {
     "@workspace/env": "workspace:*",
     "@workspace/whatsapp": "workspace:*",
-    "pg-boss": "^12.26.3",
+    "amqplib": "^2.0.1",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@types/amqplib": "^0.10.8",
     "@types/bun": "catalog:",
     "@workspace/typescript-config": "workspace:*",
     "typescript": "catalog:"

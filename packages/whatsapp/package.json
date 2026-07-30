@@ -13,7 +13,11 @@
   },
   "scripts": {
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "mq:start": "docker compose up -d",
+    "mq:watch": "docker compose up",
+    "mq:stop": "docker compose stop",
+    "mq:down": "docker compose down"
   },
   "dependencies": {
     "zod": "catalog:"

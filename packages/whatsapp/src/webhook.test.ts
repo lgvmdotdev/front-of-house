@@ -18,11 +18,11 @@ function signBody(body: string, secret: string): string {
 describe("verifyWebhookSubscription", () => {
 	test("returns the challenge when mode and token match", () => {
 		const result = verifyWebhookSubscription(
-			{
+			new URLSearchParams({
 				"hub.mode": "subscribe",
 				"hub.verify_token": VERIFY_TOKEN,
 				"hub.challenge": "1234567890",
-			},
+			}),
 			VERIFY_TOKEN
 		);
 		expect(result).toBe("1234567890");
@@ -30,11 +30,11 @@ describe("verifyWebhookSubscription", () => {
 
 	test("returns null when the mode is not subscribe", () => {
 		const result = verifyWebhookSubscription(
-			{
+			new URLSearchParams({
 				"hub.mode": "unsubscribe",
 				"hub.verify_token": VERIFY_TOKEN,
 				"hub.challenge": "1234567890",
-			},
+			}),
 			VERIFY_TOKEN
 		);
 		expect(result).toBeNull();
@@ -42,11 +42,11 @@ describe("verifyWebhookSubscription", () => {
 
 	test("returns null when the verify token does not match", () => {
 		const result = verifyWebhookSubscription(
-			{
+			new URLSearchParams({
 				"hub.mode": "subscribe",
 				"hub.verify_token": "wrong-token",
 				"hub.challenge": "1234567890",
-			},
+			}),
 			VERIFY_TOKEN
 		);
 		expect(result).toBeNull();
@@ -54,7 +54,7 @@ describe("verifyWebhookSubscription", () => {
 
 	test("returns null when required query params are missing", () => {
 		const result = verifyWebhookSubscription(
-			{ "hub.mode": "subscribe" },
+			new URLSearchParams({ "hub.mode": "subscribe" }),
 			VERIFY_TOKEN
 		);
 		expect(result).toBeNull();

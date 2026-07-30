@@ -14,18 +14,16 @@ const SUBSCRIBE_MODE = "subscribe";
  * configured verify token, `null` otherwise (caller should respond 403).
  */
 export function verifyWebhookSubscription(
-	query: Partial<
-		Record<"hub.mode" | "hub.verify_token" | "hub.challenge", string>
-	>,
+	query: URLSearchParams,
 	verifyToken: string
 ): string | null {
-	if (query["hub.mode"] !== SUBSCRIBE_MODE) {
+	if (query.get("hub.mode") !== SUBSCRIBE_MODE) {
 		return null;
 	}
-	if (query["hub.verify_token"] !== verifyToken) {
+	if (query.get("hub.verify_token") !== verifyToken) {
 		return null;
 	}
-	return query["hub.challenge"] ?? null;
+	return query.get("hub.challenge");
 }
 
 /**

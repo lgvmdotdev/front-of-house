@@ -3,48 +3,46 @@ import {
 	INBOUND_MESSAGE_QUEUE_OPTIONS,
 	type InboundMessage,
 } from "@workspace/whatsapp";
-import { PgBoss } from "pg-boss";
-
-export interface QueueClient {
-	enqueue(messages: InboundMessage[]): Promise<void>;
-	start(): Promise<void>;
-	stop(): Promise<void>;
-}
+import amqplib, { type Channel, type ChannelModel } from "amqplib";
 
 /**
- * Postgres-backed queue (via pg-boss) between this webhook receiver and the
- * `whatsapp-worker` app. Runs on the same Postgres instance as the rest of
- * the app — no separate infra.
+ * RabbitMQ-backed queue between this webhook receiver and the
+ * `whatsapp-worker` app.
  */
-export function createQueueClient(connectionString: string): QueueClient {
-	const boss = new PgBoss(connectionString);
-	boss.on("error", (error: unknown) => {
-		process.stderr.write(`[pg-boss] ${String(error)}\n`);
-	});
-
+export function createQueueClient(amqpUrl: string) {
+	let connection: ChannelModel | null = null;
+	let channel: Channel | null = null;
 	let startPromise: Promise<void> | null = null;
 
 	function ensureStarted(): Promise<void> {
-		startPromise ??= boss.start().then(async () => {
-			await boss.createQueue(
+		startPromise ??= (async () => {
+			connection = await amqplib.connect(amqpUrl);
+			connection.on("error", (error: unknown) => {
+				process.stderr.write(`[amqp] connection error: ${String(error)}\n`);
+			});
+			channel = await connection.createChannel();
+			await channel.assertQueue(
 				INBOUND_MESSAGE_QUEUE_NAME,
 				INBOUND_MESSAGE_QUEUE_OPTIONS
 			);
-		});
+		})();
 		return startPromise;
 	}
 
 	return {
 		start: ensureStarted,
-		stop: () => boss.stop(),
-		async enqueue(messages) {
+		async stop(): Promise<void> {
+			await channel?.close();
+			await connection?.close();
+		},
+		async enqueue(messages: InboundMessage[]): Promise<void> {
 			await ensureStarted();
 			for (const message of messages) {
-				await boss.send(INBOUND_MESSAGE_QUEUE_NAME, message, {
-					// Meta retries the webhook itself when it doesn't get a fast 200,
-					// so a duplicate `waMessageId` would otherwise double-enqueue.
-					singletonKey: message.waMessageId,
-				});
+				channel?.sendToQueue(
+					INBOUND_MESSAGE_QUEUE_NAME,
+					Buffer.from(JSON.stringify(message)),
+					{ persistent: true, contentType: "application/json" }
+				);
 			}
 		},
 	};

@@ -21,11 +21,7 @@ export function handleVerificationRequest(
 	config: VerificationConfig
 ): Response {
 	const challenge = verifyWebhookSubscription(
-		{
-			"hub.mode": url.searchParams.get("hub.mode") ?? undefined,
-			"hub.verify_token": url.searchParams.get("hub.verify_token") ?? undefined,
-			"hub.challenge": url.searchParams.get("hub.challenge") ?? undefined,
-		},
+		url.searchParams,
 		config.verifyToken
 	);
 	if (challenge === null) {
