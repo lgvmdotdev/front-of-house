@@ -1,0 +1,7 @@
+.next
+.turbo
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# d3k copies its own skill files here when it starts the dev server
+.claude/skills

@@ -1,0 +1,37 @@
+{
+  "name": "dashboard",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --bun next dev --turbopack --port 3001",
+    "build": "bun --bun next build",
+    "start": "bun --bun next start --port 3001",
+    "lint": "biome lint",
+    "format": "biome format --write \"**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit",
+    "seed": "bun run scripts/seed.ts"
+  },
+  "dependencies": {
+    "@remixicon/react": "^4.9.0",
+    "@workspace/auth": "workspace:*",
+    "@workspace/bookings": "workspace:*",
+    "@workspace/db": "workspace:*",
+    "@workspace/env": "workspace:*",
+    "@workspace/ui": "workspace:*",
+    "better-auth": "^1.6.5",
+    "next": "16.3.0-preview.10",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "sonner": "^2.0.7",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/bun": "catalog:",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
