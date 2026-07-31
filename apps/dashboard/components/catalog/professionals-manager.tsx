@@ -30,9 +30,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { useRouter } from "next/navigation";
-import { type FormEvent, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { type FormEvent, useState } from "react";
 import {
 	deleteProfessionalAction,
 	saveProfessionalAction,
@@ -41,6 +39,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { ProfessionalRecord, ServiceRecord } from "@/lib/catalog";
+import { useAction } from "@/lib/use-action";
 import {
 	sortWindows,
 	WEEKDAYS,
@@ -74,7 +73,7 @@ export function ProfessionalsManager({
 	professionals: ProfessionalRecord[];
 	services: ServiceRecord[];
 }) {
-	const router = useRouter();
+	const { pending, run } = useAction();
 	const [open, setOpen] = useState(false);
 	const [editing, setEditing] = useState<ProfessionalRecord | null>(null);
 	const [name, setName] = useState("");
@@ -82,7 +81,6 @@ export function ProfessionalsManager({
 	const [active, setActive] = useState(true);
 	const [serviceIds, setServiceIds] = useState<string[]>([]);
 	const [windows, setWindows] = useState<WorkingWindow[]>([]);
-	const [pending, startTransition] = useTransition();
 
 	function openCreate() {
 		setEditing(null);
@@ -128,35 +126,26 @@ export function ProfessionalsManager({
 
 	function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		startTransition(async () => {
-			const result = await saveProfessionalAction({
-				id: editing?.id,
-				name,
-				calendarId,
-				active,
-				serviceIds,
-				workingHours: windows,
-			});
-			if (result.ok) {
-				setOpen(false);
-				router.refresh();
-				toast.success("Profissional salvo");
-				return;
-			}
-			toast.error(result.error);
-		});
+		run(
+			() =>
+				saveProfessionalAction({
+					id: editing?.id,
+					name,
+					calendarId,
+					active,
+					serviceIds,
+					workingHours: windows,
+				}),
+			"Profissional salvo",
+			() => setOpen(false)
+		);
 	}
 
 	function handleDelete(professional: ProfessionalRecord) {
-		startTransition(async () => {
-			const result = await deleteProfessionalAction(professional.id);
-			if (result.ok) {
-				router.refresh();
-				toast.success("Profissional removido");
-				return;
-			}
-			toast.error(result.error);
-		});
+		run(
+			() => deleteProfessionalAction(professional.id),
+			"Profissional removido"
+		);
 	}
 
 	const serviceNames = new Map(

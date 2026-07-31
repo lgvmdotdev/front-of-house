@@ -28,9 +28,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { useRouter } from "next/navigation";
-import { type FormEvent, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { type FormEvent, useState } from "react";
 import {
 	banUserAction,
 	impersonateUserAction,
@@ -39,9 +37,9 @@ import {
 } from "@/app/(admin)/admin/_actions/users";
 import { PageHeader } from "@/components/layout/page-header";
 import { ConfirmButton } from "@/components/ui/confirm-button";
-import type { ActionResult } from "@/lib/action-result";
 import type { PlatformUser } from "@/lib/admin";
 import { formatDate } from "@/lib/format";
+import { useAction } from "@/lib/use-action";
 
 const USER_ROLES = [
 	{ value: "user", label: "Usuário" },
@@ -55,22 +53,9 @@ export function UsersManager({
 	currentUserId: string;
 	users: PlatformUser[];
 }) {
-	const router = useRouter();
+	const { pending, run } = useAction();
 	const [banTarget, setBanTarget] = useState<PlatformUser | null>(null);
 	const [banReason, setBanReason] = useState("");
-	const [pending, startTransition] = useTransition();
-
-	function run(action: () => Promise<ActionResult>, message: string) {
-		startTransition(async () => {
-			const result = await action();
-			if (result.ok) {
-				router.refresh();
-				toast.success(message);
-				return;
-			}
-			toast.error(result.error);
-		});
-	}
 
 	function handleBan(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -84,10 +69,9 @@ export function UsersManager({
 	}
 
 	function handleImpersonate(user: PlatformUser) {
-		// The action redirects into the tenant panel, so there is no result to read.
-		startTransition(async () => {
-			await impersonateUserAction(user.id);
-		});
+		// The action redirects into the tenant panel, so it never resolves here and
+		// the success message is never shown — `run` is only for the pending state.
+		run(() => impersonateUserAction(user.id), "Acesso iniciado");
 	}
 
 	return (

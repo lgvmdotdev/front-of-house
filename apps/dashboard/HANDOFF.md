@@ -5,7 +5,7 @@ panel (`app/(app)/*`) and the internal Recepcionai panel (`app/(admin)/admin/*`)
 Nothing in `apps/web`, `apps/whatsapp-*`, `packages/db` or `packages/auth` was
 modified. Dev/start on port **3001**.
 
-- 71 TypeScript files, 7 colocated test files, 97 tests (287 workspace-wide).
+- 70 TypeScript files, 7 colocated test files, 97 tests (287 workspace-wide).
 - 18 routes. All tenant-facing strings pt-BR.
 - Screenshots for every phase gate: `.verification/`.
 
@@ -51,6 +51,16 @@ modified. Dev/start on port **3001**.
   them.
 - **Mutations are server actions** returning `ActionResult`
   (`lib/action-result.ts`), zod-validated at the boundary, then `revalidatePath`.
+  Client-side, every one of them goes through `lib/use-action.ts` — refresh and
+  toast on success, toast the message on failure, with an `onSuccess` callback for
+  the parts that differ (close a dialog, clear a field, navigate to a new row).
+- **One error boundary at `app/error.tsx`** rather than one per route group. A
+  boundary never wraps the `layout.tsx` beside it, so sitting at the root is what
+  lets it also catch `requireActiveOrg` / `requireAdmin` failures in the group
+  layouts. Both `loading.tsx` files, by contrast, *must* stay inside their groups:
+  `loading.js` wraps nested `layout.js`, so a single root one would put the
+  sidebar inside the Suspense fallback and turn every navigation into a full-page
+  skeleton — the opposite of what it is there for.
 - **Admin gating** is `requireAdmin()` → `forbidden()` → real 403 page.
   `proxy.ts` only does the cheap cookie check.
 
@@ -92,7 +102,7 @@ already stale: `error.tsx`'s retry prop is stable **`retry`** in 16.3 (it was
 | `typedRoutes` | **adopt** | caught three wrong `href`s during the build; gives `PageProps<'/conversas/[id]'>` for free |
 | `PageProps<>` globals | **adopt** | replaces hand-written `params: Promise<{id:string}>` |
 | `experimental.authInterrupts` + `forbidden()` | **adopt** | `/admin` returns a real **403**, not a silent redirect. Verified: `GET /admin 403` |
-| `loading.tsx` per route group | **adopt** | the actual instant-navigation win here: sidebar+header paint immediately, only the org-scoped query streams |
+| `loading.tsx` per route group | **adopt** | the actual instant-navigation win here: sidebar+header paint immediately, only the org-scoped query streams. Must stay per-group, not at the root — see Architecture |
 | `error.tsx` with stable `retry()` | **adopt** | re-fetches and re-renders; `reset()` would replay the same failed read |
 | `data-scroll-behavior="smooth"` on `<html>` | **adopt** | `packages/ui` sets `scroll-behavior: smooth`; Next 16 stopped overriding it during transitions unless opted in, and warns in dev |
 | Turbopack (default) + `turbopackMemoryEviction` | **adopt (default)** | on by default; no config |
@@ -269,9 +279,12 @@ rewrites it. Pre-existing non-seed rows in the demo org are left alone.
    dev server then throws
    `Module …/react/compiler-runtime.js … was instantiated because it was required
    from packages/ui/src/components/sonner.tsx, but the module factory is not
-   available`. Not reproducible on a clean load — verified by hard-reloading and
-   re-walking every screen with zero recurrences. Drop `reactCompiler` if it ever
-   shows up outside this stale-chunk case.
+   available`. A worse variant of the same staleness leaves a page **rendered but
+   never hydrated** — buttons carry no `__reactProps`, so nothing responds to a
+   click, and no error is logged anywhere. Both clear up by deleting `.next` and
+   the d3k Chrome profile (`~/.d3k/<project>/chrome-profile`) before restarting;
+   bisected against `HEAD` to confirm it is environmental, not a code change.
+   Drop `reactCompiler` if it ever shows up on a genuinely clean start.
 8. **d3k needs a Chromium binary and direct routing.** No Chrome/Chromium is
    installed on this machine (only Arc, which refuses remote debugging), so
    verification used the Playwright cache's Chrome for Testing via `--browser`.

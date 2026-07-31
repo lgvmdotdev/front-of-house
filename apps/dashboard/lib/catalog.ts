@@ -1,5 +1,5 @@
 import { db, schema } from "@workspace/db";
-import { and, eq, inArray } from "@workspace/db/drizzle-orm";
+import { and, count, eq, inArray } from "@workspace/db/drizzle-orm";
 import type { ProfessionalInput, ServiceInput } from "./catalog-schema";
 import { sortWindows, type WorkingWindow } from "./working-hours";
 
@@ -234,19 +234,22 @@ export async function deleteProfessional(
 	return deleted.length > 0;
 }
 
-/** Counts for the overview cards, in one round trip per table. */
+/** Counts for the overview cards — counted in SQL, not by pulling every row. */
 export async function countCatalog(
 	orgId: string
 ): Promise<{ professionals: number; services: number }> {
 	const [services, professionals] = await Promise.all([
 		db
-			.select({ id: schema.service.id })
+			.select({ total: count() })
 			.from(schema.service)
 			.where(eq(schema.service.organizationId, orgId)),
 		db
-			.select({ id: schema.professional.id })
+			.select({ total: count() })
 			.from(schema.professional)
 			.where(eq(schema.professional.organizationId, orgId)),
 	]);
-	return { services: services.length, professionals: professionals.length };
+	return {
+		services: Number(services[0]?.total ?? 0),
+		professionals: Number(professionals[0]?.total ?? 0),
+	};
 }

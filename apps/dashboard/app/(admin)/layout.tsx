@@ -4,7 +4,7 @@ import {
 	SidebarTrigger,
 } from "@workspace/ui/components/sidebar";
 import type { ReactNode } from "react";
-import { AdminSidebar } from "@/components/layout/admin-sidebar";
+import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { requireAdmin } from "@/lib/session";
 
 /**
@@ -20,7 +20,10 @@ export default async function AdminLayout({
 
 	return (
 		<SidebarProvider>
-			<AdminSidebar
+			<DashboardSidebar
+				nav="admin"
+				subtitle="Painel interno"
+				title="Recepcionai"
 				userEmail={session.user.email}
 				userName={session.user.name}
 			/>

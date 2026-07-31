@@ -18,13 +18,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@workspace/ui/components/select";
-import { useRouter } from "next/navigation";
-import { type FormEvent, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { type FormEvent, useState } from "react";
 import { saveIntegrationAction } from "@/app/(app)/_actions/settings";
 import { formatUtcOffset } from "@/lib/format";
 import { BOOKING_PROVIDERS } from "@/lib/settings-schema";
 import type { IntegrationRecord } from "@/lib/tenant";
+import { useAction } from "@/lib/use-action";
 
 const DEFAULT_OFFSET_MINUTES = -180;
 
@@ -33,7 +32,7 @@ export function IntegrationForm({
 }: {
 	integration: IntegrationRecord | null;
 }) {
-	const router = useRouter();
+	const { pending, run } = useAction();
 	const [provider, setProvider] = useState(integration?.provider ?? "calendar");
 	const [spreadsheetId, setSpreadsheetId] = useState(
 		integration?.spreadsheetId ?? ""
@@ -41,23 +40,18 @@ export function IntegrationForm({
 	const [offsetMinutes, setOffsetMinutes] = useState(
 		String(integration?.offsetMinutes ?? DEFAULT_OFFSET_MINUTES)
 	);
-	const [pending, startTransition] = useTransition();
 
 	function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		startTransition(async () => {
-			const result = await saveIntegrationAction({
-				provider,
-				spreadsheetId,
-				offsetMinutes: Number(offsetMinutes),
-			});
-			if (result.ok) {
-				router.refresh();
-				toast.success("Integração salva");
-				return;
-			}
-			toast.error(result.error);
-		});
+		run(
+			() =>
+				saveIntegrationAction({
+					provider,
+					spreadsheetId,
+					offsetMinutes: Number(offsetMinutes),
+				}),
+			"Integração salva"
+		);
 	}
 
 	return (

@@ -22,13 +22,13 @@ import {
 } from "@workspace/ui/components/table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { type FormEvent, useState } from "react";
 import { createTenantAction } from "@/app/(admin)/admin/_actions/tenants";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { TenantSummary } from "@/lib/admin";
 import { formatDate } from "@/lib/format";
+import { useAction } from "@/lib/use-action";
 
 const COMBINING_MARKS = /[̀-ͯ]/g;
 const NON_SLUG = /[^a-z0-9]+/g;
@@ -46,6 +46,7 @@ function slugify(value: string): string {
 
 export function TenantsManager({ tenants }: { tenants: TenantSummary[] }) {
 	const router = useRouter();
+	const { pending, run } = useAction();
 	const [open, setOpen] = useState(false);
 	const [name, setName] = useState("");
 	const [slug, setSlug] = useState("");
@@ -53,7 +54,6 @@ export function TenantsManager({ tenants }: { tenants: TenantSummary[] }) {
 	const [ownerName, setOwnerName] = useState("");
 	const [ownerEmail, setOwnerEmail] = useState("");
 	const [ownerPassword, setOwnerPassword] = useState("");
-	const [pending, startTransition] = useTransition();
 
 	function openCreate() {
 		setName("");
@@ -74,23 +74,21 @@ export function TenantsManager({ tenants }: { tenants: TenantSummary[] }) {
 
 	function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		startTransition(async () => {
-			const result = await createTenantAction({
-				name,
-				slug,
-				ownerName,
-				ownerEmail,
-				ownerPassword,
-			});
-			if (result.ok) {
+		run(
+			() =>
+				createTenantAction({
+					name,
+					slug,
+					ownerName,
+					ownerEmail,
+					ownerPassword,
+				}),
+			"Barbearia criada",
+			(data) => {
 				setOpen(false);
-				toast.success("Barbearia criada");
-				router.push(`/admin/barbearias/${result.data.organizationId}`);
-				router.refresh();
-				return;
+				router.push(`/admin/barbearias/${data.organizationId}`);
 			}
-			toast.error(result.error);
-		});
+		);
 	}
 
 	return (

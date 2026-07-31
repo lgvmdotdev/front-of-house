@@ -234,22 +234,22 @@ export async function getOrganization(
  * `auth.api.updateOrganization`, which requires the caller's active
  * organization to already be set on the session — it is not, since we resolve
  * tenancy from membership. Slug uniqueness is enforced by the DB, so a
- * collision surfaces as a caught error rather than a corrupt row.
+ * collision returns `false`, matching the convention in `catalog.ts`.
  */
 export async function updateOrganization(
 	orgId: string,
 	input: OrganizationInput
-): Promise<{ ok: true } | { ok: false; reason: "slug-taken" }> {
+): Promise<boolean> {
 	const existing = await db.query.organization.findFirst({
 		where: eq(schema.organization.slug, input.slug),
 		columns: { id: true },
 	});
 	if (existing && existing.id !== orgId) {
-		return { ok: false, reason: "slug-taken" };
+		return false;
 	}
 	await db
 		.update(schema.organization)
 		.set({ name: input.name, slug: input.slug, logo: input.logo || null })
 		.where(eq(schema.organization.id, orgId));
-	return { ok: true };
+	return true;
 }

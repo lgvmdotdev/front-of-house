@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import {
 	type ActionResult,
+	authErrorMessage,
 	failure,
 	firstIssue,
 	success,
@@ -26,17 +27,6 @@ import {
  */
 
 const TEAM_PATH = "/equipe";
-
-/** better-auth throws `APIError` with a `body.code`; surface something readable. */
-function authErrorMessage(error: unknown, fallback: string): string {
-	if (error && typeof error === "object" && "body" in error) {
-		const body = (error as { body?: { message?: string } }).body;
-		if (body?.message) {
-			return body.message;
-		}
-	}
-	return fallback;
-}
 
 export async function inviteMemberAction(input: {
 	email: string;

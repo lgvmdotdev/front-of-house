@@ -26,11 +26,8 @@ export const metadata: Metadata = {
 
 const FILTERS = [
 	{ value: undefined, label: "Todas" },
-	...CONVERSATION_STATUSES.map((status) => ({
-		value: status.value as string | undefined,
-		label: status.label,
-	})),
-];
+	...CONVERSATION_STATUSES,
+] as const;
 
 export default async function ConversasPage({
 	searchParams,

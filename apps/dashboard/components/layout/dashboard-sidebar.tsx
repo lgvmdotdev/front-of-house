@@ -1,6 +1,19 @@
 "use client";
 
-import { type RemixiconComponentType, RiLogoutBoxLine } from "@remixicon/react";
+import {
+	type RemixiconComponentType,
+	RiChat3Line,
+	RiDashboardLine,
+	RiGroupLine,
+	RiLogoutBoxLine,
+	RiPlugLine,
+	RiScissorsLine,
+	RiSettings3Line,
+	RiStoreLine,
+	RiTeamLine,
+	RiUserLine,
+	RiWhatsappLine,
+} from "@remixicon/react";
 import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar";
 import {
 	DropdownMenu,
@@ -27,13 +40,54 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
-export interface SidebarNavItem {
-	/** Only match this href exactly — used for section roots like `/painel`. */
+interface SidebarNavItem {
+	/** Only match this href exactly — `/admin` is a prefix of its own children. */
 	exact?: boolean;
 	href: Route;
 	icon: RemixiconComponentType;
 	label: string;
 }
+
+/**
+ * The nav lives here rather than in the layouts because an icon is a component
+ * reference, which a Server Component cannot serialise across to the client.
+ */
+const NAV: Record<
+	"admin" | "app",
+	{ groupLabel: string; items: readonly SidebarNavItem[] }
+> = {
+	app: {
+		groupLabel: "Painel",
+		items: [
+			{
+				href: "/painel",
+				label: "Visão geral",
+				icon: RiDashboardLine,
+				exact: true,
+			},
+			{ href: "/servicos", label: "Serviços", icon: RiScissorsLine },
+			{ href: "/profissionais", label: "Profissionais", icon: RiTeamLine },
+			{ href: "/conversas", label: "Conversas", icon: RiChat3Line },
+			{ href: "/integracao", label: "Integração", icon: RiPlugLine },
+			{ href: "/whatsapp", label: "WhatsApp", icon: RiWhatsappLine },
+			{ href: "/equipe", label: "Equipe", icon: RiGroupLine },
+			{ href: "/configuracoes", label: "Configurações", icon: RiSettings3Line },
+		],
+	},
+	admin: {
+		groupLabel: "Administração",
+		items: [
+			{
+				href: "/admin",
+				label: "Visão geral",
+				icon: RiDashboardLine,
+				exact: true,
+			},
+			{ href: "/admin/barbearias", label: "Barbearias", icon: RiStoreLine },
+			{ href: "/admin/usuarios", label: "Usuários", icon: RiUserLine },
+		],
+	},
+};
 
 function initials(value: string): string {
 	return (
@@ -51,20 +105,19 @@ function initials(value: string): string {
  * differ only in their nav items and header labels.
  */
 export function DashboardSidebar({
+	nav,
 	title,
 	subtitle,
-	groupLabel,
-	items,
 	userName,
 	userEmail,
 }: {
-	groupLabel: string;
-	items: readonly SidebarNavItem[];
+	nav: "admin" | "app";
 	subtitle: string;
 	title: string;
 	userEmail: string;
 	userName: string;
 }) {
+	const { groupLabel, items } = NAV[nav];
 	const pathname = usePathname();
 	const router = useRouter();
 

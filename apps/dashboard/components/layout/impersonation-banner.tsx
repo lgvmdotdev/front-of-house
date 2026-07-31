@@ -3,9 +3,8 @@
 import { RiSpyLine } from "@remixicon/react";
 import { Button } from "@workspace/ui/components/button";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
-import { toast } from "sonner";
 import { stopImpersonatingAction } from "@/app/_actions/impersonation";
+import { useAction } from "@/lib/use-action";
 
 /**
  * Without this bar an admin who impersonates a tenant owner has no way back —
@@ -13,18 +12,12 @@ import { stopImpersonatingAction } from "@/app/_actions/impersonation";
  */
 export function ImpersonationBanner({ userName }: { userName: string }) {
 	const router = useRouter();
-	const [pending, startTransition] = useTransition();
+	const { pending, run } = useAction();
 
 	function handleStop() {
-		startTransition(async () => {
-			const result = await stopImpersonatingAction();
-			if (result.ok) {
-				router.push("/admin");
-				router.refresh();
-				return;
-			}
-			toast.error(result.error);
-		});
+		run(stopImpersonatingAction, "Acesso encerrado", () =>
+			router.push("/admin")
+		);
 	}
 
 	return (

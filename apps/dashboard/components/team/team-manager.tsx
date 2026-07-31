@@ -20,9 +20,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { useRouter } from "next/navigation";
-import { type FormEvent, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { type FormEvent, useState } from "react";
 import {
 	cancelInvitationAction,
 	inviteMemberAction,
@@ -31,10 +29,10 @@ import {
 } from "@/app/(app)/_actions/team";
 import { PageHeader } from "@/components/layout/page-header";
 import { ConfirmButton } from "@/components/ui/confirm-button";
-import type { ActionResult } from "@/lib/action-result";
 import { formatDate } from "@/lib/format";
 import { MEMBER_ROLES } from "@/lib/settings-schema";
 import type { InvitationRecord, MemberRecord } from "@/lib/tenant";
+import { useAction } from "@/lib/use-action";
 
 function roleLabel(role: string | null): string {
 	return MEMBER_ROLES.find((option) => option.value === role)?.label ?? "—";
@@ -49,35 +47,17 @@ export function TeamManager({
 	invitations: InvitationRecord[];
 	members: MemberRecord[];
 }) {
-	const router = useRouter();
+	const { pending, run } = useAction();
 	const [email, setEmail] = useState("");
 	const [role, setRole] = useState("member");
-	const [pending, startTransition] = useTransition();
-
-	function run(action: () => Promise<ActionResult>, message: string) {
-		startTransition(async () => {
-			const result = await action();
-			if (result.ok) {
-				router.refresh();
-				toast.success(message);
-				return;
-			}
-			toast.error(result.error);
-		});
-	}
 
 	function handleInvite(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		startTransition(async () => {
-			const result = await inviteMemberAction({ email, role });
-			if (result.ok) {
-				setEmail("");
-				router.refresh();
-				toast.success("Convite enviado");
-				return;
-			}
-			toast.error(result.error);
-		});
+		run(
+			() => inviteMemberAction({ email, role }),
+			"Convite enviado",
+			() => setEmail("")
+		);
 	}
 
 	return (

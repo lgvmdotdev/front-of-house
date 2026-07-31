@@ -6,7 +6,7 @@ import {
 	SidebarTrigger,
 } from "@workspace/ui/components/sidebar";
 import type { ReactNode } from "react";
-import { AppSidebar } from "@/components/layout/app-sidebar";
+import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { ImpersonationBanner } from "@/components/layout/impersonation-banner";
 import { requireActiveOrg } from "@/lib/session";
 
@@ -23,8 +23,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
 	return (
 		<SidebarProvider>
-			<AppSidebar
-				orgName={org?.name ?? "Barbearia"}
+			<DashboardSidebar
+				nav="app"
+				subtitle="Recepcionai"
+				title={org?.name ?? "Barbearia"}
 				userEmail={session.user.email}
 				userName={session.user.name}
 			/>

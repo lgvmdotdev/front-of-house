@@ -42,8 +42,7 @@ export async function saveOrganizationAction(input: {
 	if (!parsed.success) {
 		return failure(firstIssue(parsed.error.issues));
 	}
-	const result = await updateOrganization(organizationId, parsed.data);
-	if (!result.ok) {
+	if (!(await updateOrganization(organizationId, parsed.data))) {
 		return failure("Esse identificador já está em uso por outra barbearia.");
 	}
 	// The barbershop name renders in the sidebar of every screen.

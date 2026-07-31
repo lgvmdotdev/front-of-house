@@ -4,7 +4,12 @@ import { auth } from "@workspace/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { type ActionResult, failure, success } from "@/lib/action-result";
+import {
+	type ActionResult,
+	authErrorMessage,
+	failure,
+	success,
+} from "@/lib/action-result";
 import { requireAdmin } from "@/lib/session";
 
 /**
@@ -18,16 +23,6 @@ import { requireAdmin } from "@/lib/session";
  */
 
 const USERS_PATH = "/admin/usuarios";
-
-function authErrorMessage(error: unknown, fallback: string): string {
-	if (error && typeof error === "object" && "body" in error) {
-		const body = (error as { body?: { message?: string } }).body;
-		if (body?.message) {
-			return body.message;
-		}
-	}
-	return fallback;
-}
 
 export async function banUserAction(
 	userId: string,

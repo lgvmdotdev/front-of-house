@@ -274,7 +274,7 @@ describe("organization profile", () => {
 				slug,
 				logo: "https://example.com/logo.png",
 			})
-		).toEqual({ ok: true });
+		).toBe(true);
 		expect(await getOrganization(orgId)).toMatchObject({
 			name: "Barbearia Nova",
 			slug,
@@ -299,7 +299,7 @@ describe("organization profile", () => {
 				slug: other?.slug ?? "",
 				logo: "",
 			})
-		).toEqual({ ok: false, reason: "slug-taken" });
+		).toBe(false);
 		expect((await getOrganization(orgId))?.slug).not.toBe(other?.slug);
 	});
 
@@ -311,7 +311,7 @@ describe("organization profile", () => {
 				slug: own?.slug ?? "",
 				logo: "",
 			})
-		).toEqual({ ok: true });
+		).toBe(true);
 		expect((await getOrganization(orgId))?.name).toBe("Mesmo Slug");
 	});
 });

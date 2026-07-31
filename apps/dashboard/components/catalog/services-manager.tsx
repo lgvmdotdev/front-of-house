@@ -21,9 +21,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@workspace/ui/components/table";
-import { useRouter } from "next/navigation";
-import { type FormEvent, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { type FormEvent, useState } from "react";
 import {
 	deleteServiceAction,
 	saveServiceAction,
@@ -33,16 +31,16 @@ import { ConfirmButton } from "@/components/ui/confirm-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { ServiceRecord } from "@/lib/catalog";
 import { centsToInput, formatCents, inputToCents } from "@/lib/format";
+import { useAction } from "@/lib/use-action";
 
 export function ServicesManager({ services }: { services: ServiceRecord[] }) {
-	const router = useRouter();
+	const { pending, run } = useAction();
 	const [open, setOpen] = useState(false);
 	const [editing, setEditing] = useState<ServiceRecord | null>(null);
 	const [name, setName] = useState("");
 	const [duration, setDuration] = useState("");
 	const [price, setPrice] = useState("");
 	const [active, setActive] = useState(true);
-	const [pending, startTransition] = useTransition();
 
 	function openCreate() {
 		setEditing(null);
@@ -64,34 +62,22 @@ export function ServicesManager({ services }: { services: ServiceRecord[] }) {
 
 	function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		startTransition(async () => {
-			const result = await saveServiceAction({
-				id: editing?.id,
-				name,
-				durationMinutes: Number(duration),
-				priceCents: inputToCents(price),
-				active,
-			});
-			if (result.ok) {
-				setOpen(false);
-				router.refresh();
-				toast.success("Serviço salvo");
-				return;
-			}
-			toast.error(result.error);
-		});
+		run(
+			() =>
+				saveServiceAction({
+					id: editing?.id,
+					name,
+					durationMinutes: Number(duration),
+					priceCents: inputToCents(price),
+					active,
+				}),
+			"Serviço salvo",
+			() => setOpen(false)
+		);
 	}
 
 	function handleDelete(service: ServiceRecord) {
-		startTransition(async () => {
-			const result = await deleteServiceAction(service.id);
-			if (result.ok) {
-				router.refresh();
-				toast.success("Serviço removido");
-				return;
-			}
-			toast.error(result.error);
-		});
+		run(() => deleteServiceAction(service.id), "Serviço removido");
 	}
 
 	return (

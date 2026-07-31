@@ -26,10 +26,6 @@ export function inputToCents(value: string): number {
 	return Math.round(Number(value) * CENTS_PER_REAL);
 }
 
-export function formatDuration(minutes: number): string {
-	return `${minutes} min`;
-}
-
 export function formatDateTime(value: Date): string {
 	return dateTimeFormat.format(value);
 }
