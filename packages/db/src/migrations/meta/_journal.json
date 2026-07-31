@@ -15,6 +15,20 @@
       "when": 1782481678439,
       "tag": "0001_absurd_sinister_six",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785457807613,
+      "tag": "0002_cynical_prima",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785459466040,
+      "tag": "0003_omniscient_bromley",
+      "breakpoints": true
     }
   ]
 }

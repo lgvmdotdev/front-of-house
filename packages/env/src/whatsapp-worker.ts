@@ -6,6 +6,11 @@ const whatsappWorkerEnvSchema = z.object({
 	WHATSAPP_ACCESS_TOKEN: z.string(),
 	WHATSAPP_PHONE_NUMBER_ID: z.string(),
 	WHATSAPP_API_VERSION: z.optional(z.string()),
+	ANTHROPIC_API_KEY: z.string(),
+	// Optional: without these, the bookings MCP server falls back to demo
+	// data (see packages/bookings/src/mcp-server-stdio.ts).
+	GOOGLE_SERVICE_ACCOUNT_EMAIL: z.optional(z.string()),
+	GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: z.optional(z.string()),
 });
 
 const createEnv = (env: typeof Bun.env) => {

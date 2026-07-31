@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { FakeAgent } from "@workspace/agent";
 import {
 	FakeWhatsAppClient,
 	INBOUND_MESSAGE_QUEUE_NAME,
@@ -8,6 +9,8 @@ import {
 } from "@workspace/whatsapp";
 import amqplib, { type Channel, type ChannelModel } from "amqplib";
 import { processInboundMessage } from "./process-inbound-message";
+
+const ORGANIZATION_ID = "org-1";
 
 /**
  * Proves the webhook -> RabbitMQ -> worker pipeline works against a real
@@ -51,6 +54,7 @@ describe("webhook -> RabbitMQ -> worker pipeline", () => {
 
 	test("a message published to the queue is picked up and gets a receipt sent", async () => {
 		const client = new FakeWhatsAppClient();
+		const agent = new FakeAgent("Temos horário disponível!");
 		const message: InboundMessage = {
 			waMessageId: `wamid.integration-${crypto.randomUUID()}`,
 			phoneNumberId: "123456123",
@@ -77,9 +81,13 @@ describe("webhook -> RabbitMQ -> worker pipeline", () => {
 							const parsed = inboundMessageSchema.parse(data);
 							// Skip the humanized reply delay — this test proves the
 							// broker wiring works, not the timing behavior.
-							await processInboundMessage(parsed, client, {
-								wait: () => Promise.resolve(),
-							});
+							await processInboundMessage(
+								parsed,
+								client,
+								agent,
+								ORGANIZATION_ID,
+								{ wait: () => Promise.resolve() }
+							);
 							channel.ack(msg);
 							resolve();
 						} catch (error) {

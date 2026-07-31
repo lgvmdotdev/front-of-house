@@ -10,6 +10,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@workspace/agent": "workspace:*",
+    "@workspace/bookings": "workspace:*",
+    "@workspace/db": "workspace:*",
     "@workspace/env": "workspace:*",
     "@workspace/whatsapp": "workspace:*",
     "amqplib": "^2.0.1",

@@ -1,5 +1,5 @@
 {
-  "name": "@workspace/bookings",
+  "name": "@workspace/agent",
   "version": "0.0.0",
   "type": "module",
   "private": true,
@@ -16,11 +16,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@googleapis/calendar": "^15.0.0",
-    "@googleapis/sheets": "^13.0.0",
+    "@anthropic-ai/sdk": "catalog:",
     "@modelcontextprotocol/sdk": "catalog:",
+    "@workspace/bookings": "workspace:*",
     "@workspace/db": "workspace:*",
-    "google-auth-library": "^10.5.0",
     "zod": "catalog:"
   },
   "devDependencies": {

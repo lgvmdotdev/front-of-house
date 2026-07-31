@@ -31,11 +31,18 @@ export {
 	ServiceNotFoundError,
 	SlotUnavailableError,
 } from "./errors";
+// Per-org engine selection (integrationSettings + catalog -> concrete adapter).
+export {
+	type CreateBookingEngineForOrgOptions,
+	createBookingEngineForOrg,
+} from "./factory";
 // Implementations.
 export {
 	FakeBookingEngine,
 	type FakeBookingEngineSeed,
 } from "./fake";
+// MCP tool surface over a BookingEngine — used by whatsapp-worker's agent.
+export { createBookingsMcpServer } from "./mcp-server";
 // Provider-agnostic contract — code against this, not a concrete backend.
 export type { BookingEngine } from "./port";
 export {

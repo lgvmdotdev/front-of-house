@@ -1,11 +1,5 @@
+import type { Agent } from "@workspace/agent";
 import type { InboundMessage, WhatsAppClient } from "@workspace/whatsapp";
-
-/**
- * MVP reply: acknowledge receipt so the pipeline is testable end-to-end.
- * Will be replaced by the AI receptionist's actual response.
- */
-export const RECEIPT_TEXT =
-	"Recebemos sua mensagem! Em breve alguém do time vai te responder por aqui. ✅";
 
 /** Delay before showing the typing indicator, after marking the message read. */
 export const MIN_TYPING_START_DELAY_MS = 1000;
@@ -29,13 +23,15 @@ function realWait(ms: number): Promise<void> {
 }
 
 /**
- * Humanized reply sequence: mark read, pause, show typing, pause, reply.
- * Each step is spaced out so it doesn't read as an instant, obviously
- * automated response.
+ * Humanized reply sequence: mark read, pause, show typing, ask the agent for
+ * a reply, pause, send it. Each step is spaced out so it doesn't read as an
+ * instant, obviously automated response.
  */
 export async function processInboundMessage(
 	message: InboundMessage,
 	client: WhatsAppClient,
+	agent: Agent,
+	organizationId: string,
 	options: ProcessInboundMessageOptions = {}
 ): Promise<void> {
 	const wait = options.wait ?? realWait;
@@ -45,6 +41,13 @@ export async function processInboundMessage(
 		randomDelayMs(MIN_TYPING_START_DELAY_MS, MAX_TYPING_START_DELAY_MS)
 	);
 	await client.showTypingIndicator(message.waMessageId);
+
+	const { reply } = await agent.respond({
+		organizationId,
+		customerPhone: message.from,
+		message: message.text,
+	});
+
 	await wait(randomDelayMs(MIN_REPLY_DELAY_MS, MAX_REPLY_DELAY_MS));
-	await client.sendText({ to: message.from, body: RECEIPT_TEXT });
+	await client.sendText({ to: message.from, body: reply });
 }
