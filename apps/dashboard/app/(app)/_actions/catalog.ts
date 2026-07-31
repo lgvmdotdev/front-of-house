@@ -30,7 +30,20 @@ import { requireActiveOrg } from "@/lib/session";
 
 const SERVICES_PATH = "/servicos";
 const PROFESSIONALS_PATH = "/profissionais";
+const OVERVIEW_PATH = "/painel";
 const NOT_FOUND = "Registro não encontrado nesta barbearia.";
+
+/**
+ * The overview counts the catalog and the professionals screen lists services,
+ * so a change to either ripples across all three screens. Invalidating them here
+ * rather than relying on the caller's `router.refresh()` keeps the action correct
+ * on its own.
+ */
+function revalidateCatalog(): void {
+	revalidatePath(SERVICES_PATH);
+	revalidatePath(PROFESSIONALS_PATH);
+	revalidatePath(OVERVIEW_PATH);
+}
 
 export async function saveServiceAction(input: {
 	active: boolean;
@@ -52,8 +65,7 @@ export async function saveServiceAction(input: {
 	} else {
 		await createService(organizationId, parsed.data);
 	}
-	revalidatePath(SERVICES_PATH);
-	revalidatePath(PROFESSIONALS_PATH);
+	revalidateCatalog();
 	return success();
 }
 
@@ -62,8 +74,7 @@ export async function deleteServiceAction(id: string): Promise<ActionResult> {
 	if (!(await deleteService(organizationId, id))) {
 		return failure(NOT_FOUND);
 	}
-	revalidatePath(SERVICES_PATH);
-	revalidatePath(PROFESSIONALS_PATH);
+	revalidateCatalog();
 	return success();
 }
 
@@ -92,7 +103,7 @@ export async function saveProfessionalAction(input: {
 	} else {
 		await createProfessional(organizationId, parsed.data);
 	}
-	revalidatePath(PROFESSIONALS_PATH);
+	revalidateCatalog();
 	return success();
 }
 
@@ -103,6 +114,6 @@ export async function deleteProfessionalAction(
 	if (!(await deleteProfessional(organizationId, id))) {
 		return failure(NOT_FOUND);
 	}
-	revalidatePath(PROFESSIONALS_PATH);
+	revalidateCatalog();
 	return success();
 }

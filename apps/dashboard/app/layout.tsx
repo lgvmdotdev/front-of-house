@@ -49,6 +49,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 				fontHeading.variable,
 				fontMono.variable
 			)}
+			// `@workspace/ui`'s globals.css sets `scroll-behavior: smooth` on <html>.
+			// Next 16 stopped overriding that during route transitions unless this
+			// attribute opts in, and warns in dev when it is missing.
+			data-scroll-behavior="smooth"
 			lang="pt-BR"
 		>
 			<body className="bg-background font-sans text-foreground">

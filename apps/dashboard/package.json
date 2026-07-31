@@ -10,7 +10,7 @@
     "lint": "biome lint",
     "format": "biome format --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
-    "seed": "bun run scripts/seed.ts"
+    "seed": "NODE_ENV=development bun run scripts/seed.ts"
   },
   "dependencies": {
     "@remixicon/react": "^4.9.0",

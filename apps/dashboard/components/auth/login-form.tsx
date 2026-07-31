@@ -30,8 +30,8 @@ export function LoginForm() {
 			toast.error(error.message ?? "Não foi possível entrar.");
 			return;
 		}
-		// The panel layout decides where this user belongs (tenant or admin).
-		router.push("/painel");
+		// `/` routes by role — admins to `/admin`, tenants to `/painel`.
+		router.push("/");
 		router.refresh();
 	}
 
