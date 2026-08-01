@@ -3,27 +3,34 @@ import { db, schema } from "@workspace/db";
 import { eq } from "@workspace/db/drizzle-orm";
 import { headers } from "next/headers";
 import { forbidden, redirect } from "next/navigation";
+import { cache } from "react";
 
 /**
  * Session helpers for both route groups. Mirrors `apps/web/lib/session.ts` and
  * adds `requireAdmin` for the `(admin)` group. Tenancy always comes from the
  * session — never from the URL — so a tenant screen cannot be pointed at
  * another barbershop by editing the address bar.
+ *
+ * Everything here is wrapped in React `cache()` for request-level dedup. It
+ * matters more than it looks: since pages became composition surfaces, a single
+ * render calls `requireActiveOrg()` from the layout *and* from every feature
+ * component that owns a read. Without dedup that is one session lookup per
+ * section instead of one per request.
  */
 
 /** The current session (user + session row), or `null` if signed out. */
-export async function getSession() {
-	return await auth.api.getSession({ headers: await headers() });
-}
+export const getSession = cache(
+	async () => await auth.api.getSession({ headers: await headers() })
+);
 
 /** Requires a signed-in user; redirects to `/login` otherwise. */
-export async function requireSession() {
+export const requireSession = cache(async () => {
 	const session = await getSession();
 	if (!session) {
 		redirect("/login");
 	}
 	return session;
-}
+});
 
 /**
  * The organization the user belongs to, when the session has no active one.
@@ -47,7 +54,7 @@ async function firstMembershipOrgId(userId: string): Promise<string | null> {
  * signed out and `/sem-barbearia` when the user belongs to no organization.
  * The returned `organizationId` is what every `(app)` query must filter by.
  */
-export async function requireActiveOrg() {
+export const requireActiveOrg = cache(async () => {
 	const session = await requireSession();
 	const organizationId =
 		session.session.activeOrganizationId ??
@@ -56,13 +63,13 @@ export async function requireActiveOrg() {
 		redirect("/sem-barbearia");
 	}
 	return { session, organizationId };
-}
+});
 
 /** Requires the better-auth `admin` role; renders the 403 boundary otherwise. */
-export async function requireAdmin() {
+export const requireAdmin = cache(async () => {
 	const session = await requireSession();
 	if (session.user.role !== "admin") {
 		forbidden();
 	}
 	return session;
-}
+});

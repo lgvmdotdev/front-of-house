@@ -3,7 +3,7 @@
 import { RiSpyLine } from "@remixicon/react";
 import { Button } from "@workspace/ui/components/button";
 import { useRouter } from "next/navigation";
-import { stopImpersonatingAction } from "@/app/_actions/impersonation";
+import { stopImpersonatingAction } from "@/features/user/user-actions";
 import { useAction } from "@/lib/use-action";
 
 /**

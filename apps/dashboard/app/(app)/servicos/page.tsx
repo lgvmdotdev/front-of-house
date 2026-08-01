@@ -1,14 +1,34 @@
 import type { Metadata } from "next";
-import { ServicesManager } from "@/components/catalog/services-manager";
-import { listServices } from "@/lib/catalog";
-import { requireActiveOrg } from "@/lib/session";
+import { Suspense } from "react";
+import { PageHeader } from "@/components/layout/page-header";
+import { SectionError } from "@/components/ui/section-error";
+import { ServiceDialog } from "@/features/catalog/components/service-controls";
+import {
+	ServicesTable,
+	ServicesTableSkeleton,
+} from "@/features/catalog/components/services-table";
 
 export const metadata: Metadata = {
 	title: "Serviços · Recepcionai",
 };
 
-export default async function ServicosPage() {
-	const { organizationId } = await requireActiveOrg();
-	const services = await listServices(organizationId);
-	return <ServicesManager services={services} />;
+/**
+ * Composition only: the header and the "novo serviço" button read nothing, so
+ * they paint immediately and the table streams in behind its own boundary.
+ */
+export default function ServicosPage() {
+	return (
+		<div className="flex flex-col gap-6">
+			<PageHeader
+				action={<ServiceDialog />}
+				description="O que a recepcionista pode oferecer e agendar no WhatsApp."
+				title="Serviços"
+			/>
+			<SectionError title="Não foi possível carregar os serviços">
+				<Suspense fallback={<ServicesTableSkeleton />}>
+					<ServicesTable />
+				</Suspense>
+			</SectionError>
+		</div>
+	);
 }

@@ -1,23 +1,28 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/page-header";
-import { IntegrationForm } from "@/components/settings/integration-form";
-import { requireActiveOrg } from "@/lib/session";
-import { getIntegrationSettings } from "@/lib/tenant";
+import { SectionError } from "@/components/ui/section-error";
+import {
+	IntegrationCard,
+	IntegrationCardSkeleton,
+} from "@/features/organization/components/integration-card";
 
 export const metadata: Metadata = {
 	title: "Integração · Recepcionai",
 };
 
-export default async function IntegracaoPage() {
-	const { organizationId } = await requireActiveOrg();
-	const integration = await getIntegrationSettings(organizationId);
+export default function IntegracaoPage() {
 	return (
 		<div className="flex max-w-2xl flex-col gap-6">
 			<PageHeader
 				description="A Recepcionai não substitui sua ferramenta de agenda — ela agenda dentro dela."
 				title="Integração"
 			/>
-			<IntegrationForm integration={integration} />
+			<SectionError title="Não foi possível carregar a integração">
+				<Suspense fallback={<IntegrationCardSkeleton />}>
+					<IntegrationCard />
+				</Suspense>
+			</SectionError>
 		</div>
 	);
 }

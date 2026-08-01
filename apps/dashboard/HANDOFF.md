@@ -5,9 +5,15 @@ panel (`app/(app)/*`) and the internal Recepcionai panel (`app/(admin)/admin/*`)
 Nothing in `apps/web`, `apps/whatsapp-*`, `packages/db` or `packages/auth` was
 modified. Dev/start on port **3001**.
 
-- 70 TypeScript files, 7 colocated test files, 97 tests (287 workspace-wide).
 - 18 routes. All tenant-facing strings pt-BR.
 - Screenshots for every phase gate: `.verification/`.
+
+> **Superseded in places.** The app has since been restructured onto the
+> feature-sliced RSC architecture: `lib/` no longer holds domain logic, pages are
+> synchronous composition surfaces, and each screen streams behind its own
+> Suspense boundary. [ARCHITECTURE.md](./ARCHITECTURE.md) is the current
+> description of the layout and the reasoning; the sections below are marked
+> where they no longer hold.
 
 ---
 
@@ -39,30 +45,42 @@ modified. Dev/start on port **3001**.
 
 ### Architecture as implemented
 
+Still true:
+
 - **Tenancy from the session, never the URL.** `lib/session.ts` is the only place
   that decides which barbershop you are in. No `(app)` page accepts an org id.
 - **Every org-scoped query takes `organizationId` as its first argument** and
-  filters on it (`lib/catalog.ts`, `lib/tenant.ts`). Mutations return `false`
-  rather than throwing when nothing matched, so a foreign id is indistinguishable
-  from a missing one. Cross-tenant reads are covered by tests.
-- **Cross-tenant reads are quarantined in `lib/admin.ts`** — the only file
-  without an org filter, and it is imported exclusively from `(admin)`. Its
-  per-tenant detail view reuses the org-scoped functions instead of duplicating
-  them.
+  filters on it. Mutations return `false` rather than throwing when nothing
+  matched, so a foreign id is indistinguishable from a missing one. Cross-tenant
+  reads are covered by tests.
+- **Cross-tenant reads are quarantined** in the two admin-only features
+  (`features/tenant/`, `features/user/`) — the only queries without an org
+  filter, imported exclusively from `(admin)`. The per-tenant detail view reuses
+  the org-scoped queries instead of duplicating them.
 - **Mutations are server actions** returning `ActionResult`
   (`lib/action-result.ts`), zod-validated at the boundary, then `revalidatePath`.
-  Client-side, every one of them goes through `lib/use-action.ts` — refresh and
-  toast on success, toast the message on failure, with an `onSuccess` callback for
-  the parts that differ (close a dialog, clear a field, navigate to a new row).
-- **One error boundary at `app/error.tsx`** rather than one per route group. A
-  boundary never wraps the `layout.tsx` beside it, so sitting at the root is what
-  lets it also catch `requireActiveOrg` / `requireAdmin` failures in the group
-  layouts. Both `loading.tsx` files, by contrast, *must* stay inside their groups:
-  `loading.js` wraps nested `layout.js`, so a single root one would put the
-  sidebar inside the Suspense fallback and turn every navigation into a full-page
-  skeleton — the opposite of what it is there for.
 - **Admin gating** is `requireAdmin()` → `forbidden()` → real 403 page.
   `proxy.ts` only does the cheap cookie check.
+
+Changed — see [ARCHITECTURE.md](./ARCHITECTURE.md):
+
+- **Queries and actions moved out of `lib/` and `app/**/_actions/`** into
+  `features/<domain>/`. The three god-files (`catalog.ts`, `tenant.ts`,
+  `admin.ts`) are gone; `lib/` keeps only non-domain helpers.
+- **`lib/use-action.ts` no longer calls `router.refresh()`.** The actions'
+  `revalidatePath` calls already cover every affected screen, and a server action
+  that revalidated the current route returns the fresh payload with its own
+  response. It also accepts `successMessage: null` for the mutations where a
+  `useOptimistic` update is the feedback.
+- **`app/error.tsx` is now the last resort, not the only boundary.** Each
+  fallible section is wrapped in `components/ui/section-error.tsx` (`catchError`
+  from `next/error`), so one failed read no longer takes the screen with it.
+  Keeping the route-level boundary at the root still matters for the same reason
+  as before: it is what catches `requireActiveOrg` / `requireAdmin` failures in
+  the group layouts.
+- **Both `loading.tsx` files were deleted.** They existed to stop a blocking
+  async page from painting nothing; now that pages are synchronous, a generic
+  full-area skeleton only pre-empts the real shell they were compensating for.
 
 ---
 
@@ -102,16 +120,20 @@ already stale: `error.tsx`'s retry prop is stable **`retry`** in 16.3 (it was
 | `typedRoutes` | **adopt** | caught three wrong `href`s during the build; gives `PageProps<'/conversas/[id]'>` for free |
 | `PageProps<>` globals | **adopt** | replaces hand-written `params: Promise<{id:string}>` |
 | `experimental.authInterrupts` + `forbidden()` | **adopt** | `/admin` returns a real **403**, not a silent redirect. Verified: `GET /admin 403` |
-| `loading.tsx` per route group | **adopt** | the actual instant-navigation win here: sidebar+header paint immediately, only the org-scoped query streams. Must stay per-group, not at the root — see Architecture |
+| `loading.tsx` per route group | ~~adopt~~ → **removed** | was the instant-navigation win while pages blocked on a query. Synchronous pages + per-section `<Suspense>` do it better: the header, filters and buttons are real, not a grey block. See ARCHITECTURE.md Part 3 |
+| `<Suspense>` per section + sibling skeletons | **adopt** | replaces the above. 18 boundaries across 13 pages |
+| `catchError` (stable in 16.3) | **adopt** | `components/ui/section-error.tsx`. Verified it still lets `forbidden()` reach the 403 page and `notFound()` reach the 404 page |
+| `useLinkStatus` | **adopt** | drives `data-pending` on the conversation filters. A local `useTransition` around an optimistic setter settles in the same tick, so its `isPending` was useless for dimming |
+| React `cache()` | **adopt** | session helpers and the reads that two components now share in one render. Not "just in case" — each one has a real second caller |
 | `error.tsx` with stable `retry()` | **adopt** | re-fetches and re-renders; `reset()` would replay the same failed read |
 | `data-scroll-behavior="smooth"` on `<html>` | **adopt** | `packages/ui` sets `scroll-behavior: smooth`; Next 16 stopped overriding it during transitions unless opted in, and warns in dev |
 | Turbopack (default) + `turbopackMemoryEviction` | **adopt (default)** | on by default; no config |
 | `reactCompiler` | **adopt** | matches `apps/web`; build verified green with it on |
 | DevTools MCP / `/_next/mcp` | **adopt (tooling)** | used during development |
-| **`cacheComponents`** | **reject** | Architecturally incompatible, not just unnecessary: every read is keyed by `organizationId`, which comes from `cookies()`/`headers()` — exactly what a `"use cache"` scope may not read. Caching would require hoisting the org id into every function signature and a per-tenant tag vocabulary, to cache 3 ms queries in a write-heavy panel |
-| `"use cache"`, `cacheLife`, `cacheTag`, `updateTag` | **reject** | all gated on `cacheComponents` |
-| `partialPrefetching`, `export const instant`/`prefetch`, `cachedNavigations` | **reject** | documented as requiring `cacheComponents`; config validation rejects `partialPrefetching` without it |
-| `refresh()` (new in 16.3) | **reject** | verified present in `next/cache`, but redundant here — `revalidatePath` already invalidates the client router cache for the affected paths. Confirmed empirically: the overview count updates after a mutation with no reload |
+| **`cacheComponents`** | ~~reject~~ → **deferred** | The "architecturally incompatible" reasoning was wrong: hoisting the org id into a private cached function is exactly how the reference apps solve it (`getFeed()` → `getFeedForHandle(handle, …)`, session reads via `'use cache: private'`). What still stands is the *value* argument — caching 3 ms org-scoped queries in a write-heavy panel buys nothing. The reason to revisit is the static shell, not query cost. See ARCHITECTURE.md Part 5 |
+| `"use cache"`, `cacheLife`, `cacheTag`, `updateTag` | **deferred** | all gated on `cacheComponents` |
+| `partialPrefetching`, `export const instant`/`prefetch`, `cachedNavigations` | **deferred** | documented as requiring `cacheComponents`; config validation rejects `partialPrefetching` without it |
+| `refresh()` (new in 16.3) | **reject** | verified present in `next/cache`, but redundant here — `revalidatePath` already invalidates the client router cache for the affected paths. Confirmed empirically over CDP: create a service and the row plus the overview count both update with no reload, now that `router.refresh()` is gone too |
 | `turbopackFileSystemCacheForBuild` | **reject** | only pays off if CI persists `.next`; it does not |
 | `inlineCss`, `useLightningcss`, `sri`, per-link `prefetch` tuning | **reject** | public-web page-weight tuning for an authenticated internal panel |
 | `after()`, `connection()` | **reject** | no background work. `after()` is the right tool if audit logging lands (see gaps) |
@@ -291,6 +313,18 @@ rewrites it. Pre-existing non-seed rows in the demo org are left alone.
    Portless routing must be off (`--no-portless`): better-auth validates the
    `Origin` header against `BETTER_AUTH_URL`, and `http://dashboard.localhost:1355`
    makes every sign-in fail with `Invalid origin`.
+9. **d3k v0.0.178 will not start here at all.** It dies in its own
+   `autoInstallSkills` with `TypeError: undefined is not an object (evaluating
+   'this.options')` before touching the browser, regardless of flags. The
+   architecture pass was verified by driving the Playwright cache's Chrome for
+   Testing directly over CDP instead (`--headless=new
+   --remote-debugging-port=9222`), which needs no extra dependency. Retry d3k
+   after an upgrade.
+10. **A missing id on the two detail routes returns 200, not 404** — the 404
+    *page* renders, but a synchronous page has already committed its response by
+    the time the boundary calls `notFound()`, and `generateMetadata` streams too.
+    Deliberate; reversible per-route by awaiting the read in the page body. See
+    ARCHITECTURE.md Part 3.
 
 ---
 
@@ -315,7 +349,9 @@ Definition of done:
   diagnostics; that file is byte-identical to `main`.)
 - `turbo typecheck` — clean for `dashboard`, `@workspace/ui`, `@workspace/bookings`.
   `web#typecheck` fails for the pre-existing reason in known issue 3.
-- `bun test` — 97 in `apps/dashboard`, 287 workspace-wide, 0 failures.
+- `bun test` — 99 in `apps/dashboard`, 0 failures. Must be run **from
+  `apps/dashboard`**: from the repo root bun globs the whole workspace and loads
+  no `.env`, so every DB-backed suite fails on env validation (known issue 6).
 - `bunx --bun next build` in `apps/dashboard` — succeeds, 18 routes.
 - `packages/ui`'s only change is a new file nothing else imports, so `apps/web`'s
   behaviour is unchanged by it (it remains broken for reason 3, as it was before).
